@@ -11,7 +11,6 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import saaf.Inspector;
 
-
 import bridges.connect.Bridges;
 import bridges.connect.DataSource;
 import bridges.data_src_dependent.City;
@@ -63,11 +62,8 @@ public class Transform implements RequestHandler<Request, HashMap<String, Object
             throw new RuntimeException(e);
         }
 
-        for (CSVRecord record : dataParser) {
 
-        }
 
-        
         //****************END FUNCTION IMPLEMENTATION***************************
                 
         //Collect final information such as total runtime and cpu deltas.
@@ -79,16 +75,16 @@ public class Transform implements RequestHandler<Request, HashMap<String, Object
 
 
         File objectData = new File("mobile.csv");
-        String text = "";
+        StringBuilder text = new StringBuilder();
         Scanner scanner = new Scanner(objectData);
         while (scanner.hasNext()) {
-            text += scanner.nextLine() + "\n";
+            text.append(scanner.nextLine()).append("\n");
         }
         scanner.close();
 
         CSVParser dataParser;
         try {
-            dataParser = CSVParser.parse(text, CSVFormat.DEFAULT.builder().setHeader().build());
+            dataParser = CSVParser.parse(text.toString(), CSVFormat.DEFAULT.builder().setHeader().build());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -114,23 +110,13 @@ public class Transform implements RequestHandler<Request, HashMap<String, Object
             float userPercentOfGamingAppUsage = userGamingAppUsage / userTotalAppUsage;
 
             String resultState = "N/A";
-
-            if ("New York".equals(userCity)) {
-                userCity = "New York City";
-            }
-
             if (recurringCities.containsKey(userCity)) {
                 resultState = recurringCities.get(userCity);
             } else {
                 HashMap<String, String> map = new HashMap<String, String>();
                 map.put("city", userCity.replace(" ", "%20"));
                 List<City> cities = ds.getUSCitiesData(map);
-                cities.sort(new Comparator<City>() {
-                    @Override
-                    public int compare(City o1, City o2) {
-                        return o2.getPopulation() - o1.getPopulation();
-                    }
-                });
+                cities.sort((o1, o2) -> o2.getPopulation() - o1.getPopulation());
                 if (!cities.isEmpty()) {
                     String userState = cities.get(0).getState();
                     resultState = userState;
