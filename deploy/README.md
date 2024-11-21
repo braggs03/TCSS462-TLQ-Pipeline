@@ -29,7 +29,7 @@ The src folder contains all of the code for your function.
 
   * [**Inspector.java**](../src/main/java/saaf/Inspector.java) is the SAAF itself and is completely independent of any files or folders in this project. If you do not plan to use this file sctructure, the saaf package can be moved into any Java project.
 
-  * [**lambda/Hello.java**](../src/main/java/lambda/Hello.java) and [**ibm/Hello.java**](../src/main/java/ibm/Hello.java) are the handler classes that will be called by each platform.
+  * [**lambda/Hello.java**](../src/main/java/lambda/Transform.java) and [**ibm/Hello.java**](../src/main/java/ibm/Hello.java) are the handler classes that will be called by each platform.
     - If you perfer using POJOs for requests, refactor [**lambda/HelloPOJO.java**](../src/main/java/lambda/HelloPOJO.java) into **lambda/Hello.java** and define parameter getters and setters in [**lambda/Request.java**](../src/main/java/lambda/Request.java)
   
   * [**Response.java**](../src/main/java/saaf/Response.java) if you prefer using POJOs over Hashmaps to represent request JSON, you can use this class for your response and then add all of it's attributes to the output by calling the *Insector.consumeResponse()* method.
