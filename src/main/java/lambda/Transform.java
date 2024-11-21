@@ -89,19 +89,21 @@ public class Transform implements RequestHandler<Request, HashMap<String, Object
             throw new RuntimeException(e);
         }
 
+
+
         Bridges bridges = new Bridges(1, "braggs03", "892460948341");
         DataSource ds = bridges.getDataSource();
 
         Map<String, String> recurringCities = new HashMap<>();
 
         for (CSVRecord record : dataParser) {
-            int userAge = Integer.parseInt(record.get(1));
-            String userGender = record.get(2);
-            int userNumberOfApps = Integer.parseInt(record.get(5));
-            float userSocialMediaUsage = Float.parseFloat(record.get(6));
-            float userProductivityAppUsage = Float.parseFloat(record.get(7));
-            float userGamingAppUsage = Float.parseFloat(record.get(8));
-            String userCity  = record.get(9);
+            int userAge = Integer.parseInt(record.get(0));
+            String userGender = record.get(1);
+            int userNumberOfApps = Integer.parseInt(record.get(2));
+            float userSocialMediaUsage = Float.parseFloat(record.get(3));
+            float userProductivityAppUsage = Float.parseFloat(record.get(4));
+            float userGamingAppUsage = Float.parseFloat(record.get(5));
+            String userCity  = record.get(6);
 
             float userTotalAppUsage = userSocialMediaUsage + userProductivityAppUsage + userGamingAppUsage;
 
@@ -128,7 +130,7 @@ public class Transform implements RequestHandler<Request, HashMap<String, Object
 
             String transformedRow = String.format("%s,%s,%s,%s,%.2f,%s,%.2f,%s,%.2f,%s,%s\n", userAge, userGender, userNumberOfApps, userSocialMediaUsage, userPercentOfSocialMedia, userProductivityAppUsage, userPercentOfProductivityAppUsage, userGamingAppUsage, userPercentOfGamingAppUsage, userCity, resultState);
 
-            System.out.println(transformedRow);
+
 
         }
     }
