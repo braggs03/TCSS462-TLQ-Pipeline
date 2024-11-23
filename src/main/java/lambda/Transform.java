@@ -56,7 +56,7 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
 
         //Collect initial data.
         Inspector inspector = new Inspector();
-        inspector.inspectContainer();
+        inspector.inspectAll();
 
         //****************START FUNCTION IMPLEMENTATION*************************
 
@@ -113,7 +113,7 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
             throw new RuntimeException(e);
         }
 
-        File tmpFile = new File(tmpFileName);
+        final File tmpFile = new File(tmpFileName);
 
         s3Client.putObject(PUT_BUCKET, filename, tmpFile);
 
@@ -121,6 +121,7 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
 
         //****************END FUNCTION IMPLEMENTATION***************************
 
+        inspector.inspectAllDeltas();
         return inspector.finish();
     }
 
