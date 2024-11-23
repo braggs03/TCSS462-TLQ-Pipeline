@@ -32,7 +32,7 @@ import saaf.Inspector;
  * @author Brandon Ragghianti
  * @author Michael
  * @author Tyler
- * @author Gabriel
+ * @author Gabriel Stupart
  * @version 1.0
  */
 public class Transform implements RequestHandler<HashMap<String, Object>,
