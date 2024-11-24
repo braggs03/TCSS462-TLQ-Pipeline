@@ -28,6 +28,7 @@ import saaf.Inspector;
 /**
  * Transform lambda function as part of the Transform-Load-Query pipeline for TCSS-462.
  * This lambda function is automatically invoked via a Cloud-Watch event when a file is placed in the correct S3 bucket.
+ * This function transforms the file given by the S3 bucket event.
  *
  * @author Brandon Ragghianti
  * @author Michael
@@ -51,11 +52,12 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
      * @return The state of this lambda function container.
      */
     public HashMap<String, Object> handleRequest(
-            final HashMap<String, Object> request, final Context context
+            final HashMap<String, Object> request,
+            final Context context
     ) {
 
         //Collect initial data.
-        Inspector inspector = new Inspector();
+        final Inspector inspector = new Inspector();
         inspector.inspectAll();
 
         //****************START FUNCTION IMPLEMENTATION*************************
@@ -73,7 +75,7 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
         // Create a CSVParser on the S3 file.
         final CSVParser dataParser;
         try {
-            dataParser = CSVParser.parse(objectData, Charset.defaultCharset(), CSVFormat.DEFAULT.builder().setHeader().build());
+            dataParser = CSVParser.parse(objectData, Charset.defaultCharset(), CSVFormat.DEFAULT);
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
@@ -108,16 +110,22 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
         }
 
         try {
+            dataParser.close();
             writer.close();
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
 
+        // Load tmpFile.
         final File tmpFile = new File(tmpFileName);
 
+        // Place tmpFile into next bucket.
         s3Client.putObject(PUT_BUCKET, filename, tmpFile);
 
-        tmpFile.delete();
+        // Delete tmpFile from /tmp.
+        if (!tmpFile.delete()) {
+            System.err.println("Failed to delete temporary file: " + tmpFileName);
+        }
 
         //****************END FUNCTION IMPLEMENTATION***************************
 
@@ -129,6 +137,7 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
             final CSVRecord record,
             final Map<String, CacheLocation> recurringCities
     ) {
+
         // Retrieve all data from the CSV row.
         final int userAge = Integer.parseInt(record.get(0));
         final String userGender = record.get(1);
@@ -154,8 +163,9 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
             resultCountry = recurringCities.get(userCity).getCountry();
         } else {
             try {
+
                 // Create URL and query OpenCage API for given row city.
-                final URL url = new URL(String.format("https://api.opencagedata.com/geocode/v1/json?q=%s&key=%s", userCity.replace(" ", "%20"), API_KEY));
+                final URL url = new URL(String.format("https://api.opencagedata.com/geocode/v1/json?q=%s&key=%s&limit=1", userCity.replace(" ", "%20"), API_KEY));
                 final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.connect();
