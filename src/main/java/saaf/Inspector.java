@@ -1,6 +1,5 @@
 package saaf;
 
-import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.BufferedReader;
@@ -15,7 +14,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -488,23 +486,6 @@ public class Inspector {
     }
 
     /**
-     * Add all attributes of a response object to FaaS Inspector.
-     *
-     * @param response The response object to consume.
-     */
-    public void consumeResponse(Response response) {
-        Map<String, Object> responseMap = beanProperties(response);
-        if (responseMap == null) {
-            attributes.put("SAAFConsumeReponseError", "There was an error consuming the response object. See logs for details."+             
-            "Response object may have fields that were null or could not be cast.");
-            return;
-        }
-        responseMap.keySet().forEach((s) -> {
-            attributes.put(s, responseMap.get(s));
-        });
-    }
-
-    /**
      * Finalize the Inspector. Calculator the total runtime and return the HashMap
      * object containing all attributes collected.
      *
@@ -514,17 +495,6 @@ public class Inspector {
         this.addTimeStamp("runtime");
         attributes.put("endTime", System.currentTimeMillis());
         return attributes;
-    }
-
-    /**
-     * Finalize the Inspector. Calculator the total runtime and return the HashMap
-     * object containing all attributes collected and onsume a response object.
-     *
-     * @return Attributes collected by the Inspector.
-     */
-    public HashMap<String, Object> finish(Response response) {
-        consumeResponse(response);
-        return finish();
     }
 
     /**

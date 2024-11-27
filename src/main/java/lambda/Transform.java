@@ -43,7 +43,7 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
     private static final String API_KEY = "e6bc8eff15f74c6d928a897a0264635f";
 
     /** The S3 bucket for the transformed CSV file to be put. */
-    private static final String PUT_BUCKET = "";
+    private static final String PUT_BUCKET = "load.bucket.mam";
 
     /**
      * Handler for the AWS lambda function. Automatically triggered by a Cloud-Watch event.
@@ -80,9 +80,6 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
             throw new RuntimeException(e);
         }
 
-        // Delete S3 file.
-        s3Client.deleteObject(new DeleteObjectRequest(bucketname, filename));
-
         // Caches already queried cities.
         final Map<String, CacheLocation> recurringCities = new HashMap<>();
 
@@ -115,6 +112,9 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
+
+        // Delete S3 file.
+        s3Client.deleteObject(new DeleteObjectRequest(bucketname, filename));
 
         // Load tmpFile.
         final File tmpFile = new File(tmpFileName);
