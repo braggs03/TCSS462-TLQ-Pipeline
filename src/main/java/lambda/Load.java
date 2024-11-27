@@ -30,12 +30,16 @@ import java.util.UUID;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import saaf.Inspector;
 
 public class Load implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
 
+    private static final String DATABASE_KEY_NAME = "MyDatabase";
+    private static final String DATABASE_BUCKET_NAME = "TLQ_PIPELINE_TCSS462_GROUP5";
+    private static final String DATABASE_LOCATION = "/tmp/mydata.db";
     static int keyNum = 0;
 
     /**
@@ -84,14 +88,23 @@ public class Load implements RequestHandler<HashMap<String, Object>, HashMap<Str
 
         // Delete S3 file.
         s3Client.deleteObject(new DeleteObjectRequest(bucketname, filename));
-
+        
+        if (s3Client.doesObjectExist(DATABASE_BUCKET_NAME, DATABASE_KEY_NAME)) {
+            final S3Object s3Database = s3Client.getObject(new GetObjectRequest(bucketname, filename));
+            final InputStream databaseData = s3Database.getObjectContent();
+            try {
+                FileUtils.copyInputStreamToFile(databaseData, new File(DATABASE_LOCATION));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         try
         {
             // Connection string an in-memory SQLite DB
             // Connection con = DriverManager.getConnection("jdbc:sqlite:"); 
 
             // Connection string for a file-based SQlite DB
-            Connection con = DriverManager.getConnection("jdbc:sqlite:/tmp/mytest.db");
+            Connection con = DriverManager.getConnection("jdbc:sqlite:/tmp/mydata.db");
 
             // Detect if the table 'mytable' exists in the database
             PreparedStatement ps = con.prepareStatement("SELECT name FROM sqlite_master WHERE type='table' AND name='mytable'");
@@ -131,15 +144,15 @@ public class Load implements RequestHandler<HashMap<String, Object>, HashMap<Str
             rs.close();
             con.close();  
             
-            // sleep to ensure that concurrent calls obtain separate Lambdas
-            try
-            {
-                Thread.sleep(200);
-            }
-            catch (InterruptedException ie)
-            {
-                logger.log("interrupted while sleeping...");
-            }
+            // // sleep to ensure that concurrent calls obtain separate Lambdas
+            // try
+            // {
+            //     Thread.sleep(200);
+            // }
+            // catch (InterruptedException ie)
+            // {
+            //     logger.log("interrupted while sleeping...");
+            // }
         }
         catch (SQLException sqle)
         {
@@ -147,6 +160,7 @@ public class Load implements RequestHandler<HashMap<String, Object>, HashMap<Str
             sqle.printStackTrace();
         }
         
+        s3Client.putObject(DATABASE_BUCKET_NAME, DATABASE_KEY_NAME, new File(DATABASE_LOCATION));
         //****************END FUNCTION IMPLEMENTATION***************************
         
         //Collect final information such as total runtime and cpu deltas.
