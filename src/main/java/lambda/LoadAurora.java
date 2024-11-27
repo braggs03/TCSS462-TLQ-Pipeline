@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.FileInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -24,6 +25,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -35,11 +37,7 @@ import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import saaf.Inspector;
 
-public class Load implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
-
-    private static final String DATABASE_KEY_NAME = "MyDatabase";
-    private static final String DATABASE_BUCKET_NAME = "TLQ_PIPELINE_TCSS462_GROUP5";
-    private static final String DATABASE_LOCATION = "/tmp/mydata.db";
+public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
 
     /**
      * Handler for the AWS lambda function. Automatically triggered by a Cloud-Watch event.
@@ -55,15 +53,6 @@ public class Load implements RequestHandler<HashMap<String, Object>, HashMap<Str
         //Collect initial data.
         Inspector inspector = new Inspector();
         inspector.inspectAll();
-        
-        String pwd = System.getProperty("user.dir");
-        logger.log("pwd=" + pwd);
-
-        logger.log("set pwd to tmp");        
-        setCurrentDirectory("/tmp");
-        
-        pwd = System.getProperty("user.dir");
-        logger.log("pwd=" + pwd);
 
         //****************START FUNCTION IMPLEMENTATION*************************
 
@@ -88,31 +77,23 @@ public class Load implements RequestHandler<HashMap<String, Object>, HashMap<Str
         // Delete S3 file.
         s3Client.deleteObject(new DeleteObjectRequest(bucketname, filename));
         
-        if (s3Client.doesObjectExist(DATABASE_BUCKET_NAME, DATABASE_KEY_NAME)) {
-            final S3Object s3Database = s3Client.getObject(new GetObjectRequest(bucketname, filename));
-            final InputStream databaseData = s3Database.getObjectContent();
-            try {
-                FileUtils.copyInputStreamToFile(databaseData, new File(DATABASE_LOCATION));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
         try
         {
-            // Connection string an in-memory SQLite DB
-            // Connection con = DriverManager.getConnection("jdbc:sqlite:"); 
-
-            // Connection string for a file-based SQlite DB
-            Connection con = DriverManager.getConnection("jdbc:sqlite:/tmp/mydata.db");
+            Properties properties = new Properties();
+            properties.load(new FileInputStream("db.properties"));
+            String url = properties.getProperty("url");
+            String username = properties.getProperty("username");
+            String password = properties.getProperty("password");
+            Connection con = DriverManager.getConnection(url,username,password);
 
             // Detect if the table 'mytable' exists in the database
-            PreparedStatement ps = con.prepareStatement("SELECT name FROM sqlite_master WHERE type='table' AND name='mytable'");
+            PreparedStatement ps = con.prepareStatement("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'TLQ' AND table_name = 'DATA');");
             ResultSet rs = ps.executeQuery();
             if (!rs.next())
             {
                 // 'mytable' does not exist, and should be created
                 logger.log("trying to create table 'mytable'");
-                ps = con.prepareStatement("CREATE TABLE mytable ( userID INTEGER PRIMARY KEY, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, " + 
+                ps = con.prepareStatement("CREATE TABLE mytable ( userID INTEGER, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, " + 
                 "userSocialMediaUsage INTEGER, userPercentOfSocialMedia REAL, userProductivityAppUsage REAL, " +
                 "userPercentOfProductivityAppUsage REAL, userGamingAppUsage REAL, userPercentOfGamingAppUsage REAL, " +
                 "userCity TEXT, resultState TEXT, resultCountry TEXT);");
@@ -152,31 +133,15 @@ public class Load implements RequestHandler<HashMap<String, Object>, HashMap<Str
             //     logger.log("interrupted while sleeping...");
             // }
         }
-        catch (SQLException sqle)
+        catch (Exception e) 
         {
-            logger.log("DB ERROR:" + sqle.toString());
-            sqle.printStackTrace();
+            logger.log("Got an exception working with MySQL! ");
+            logger.log(e.getMessage());
         }
-        
-        s3Client.putObject(DATABASE_BUCKET_NAME, DATABASE_KEY_NAME, new File(DATABASE_LOCATION));
         //****************END FUNCTION IMPLEMENTATION***************************
         
         //Collect final information such as total runtime and cpu deltas.
         inspector.inspectAllDeltas();
         return inspector.finish();
-    }
-
-    public static boolean setCurrentDirectory(String directory_name)
-    {
-        boolean result = false;  // Boolean indicating whether directory was set
-        File    directory;       // Desired current working directory
-
-        directory = new File(directory_name).getAbsoluteFile();
-        if (directory.exists() || directory.mkdirs())
-        {
-            result = (System.setProperty("user.dir", directory.getAbsolutePath()) != null);
-        }
-
-        return result;
     }
 }
