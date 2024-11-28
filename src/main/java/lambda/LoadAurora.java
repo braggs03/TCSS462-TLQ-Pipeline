@@ -10,7 +10,6 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.FileInputStream;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -19,7 +18,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Properties;
-
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -85,7 +83,7 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
             logger.log("Inside try catch block.");
             Properties properties = new Properties();
             logger.log("opening dp properties.");
-            properties.load(new FileInputStream("db.properties"));
+            properties.load(LoadAurora.class.getClassLoader().getResourceAsStream("/db.properties"));
             logger.log("url.");
             String url = properties.getProperty("url");
             logger.log("username.");
