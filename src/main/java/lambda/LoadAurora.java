@@ -87,13 +87,15 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
             Connection con = DriverManager.getConnection(url,username,password);
 
             // Detect if the table 'mytable' exists in the database
-            PreparedStatement ps = con.prepareStatement("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'TLQ' AND table_name = 'DATA');");
+            PreparedStatement ps = con.prepareStatement("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'mobiledata' AND table_name = 'data');");
             ResultSet rs = ps.executeQuery();
-            if (!rs.next())
+            rs.next();
+            if (!rs.getBoolean(1))
             {
                 // 'mytable' does not exist, and should be created
-                logger.log("trying to create table 'mytable'");
-                ps = con.prepareStatement("CREATE TABLE mytable ( userID INTEGER AUTO_INCREMENT, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, " + 
+                logger.log("trying to create table 'data'");
+                ps.close();
+                ps = con.prepareStatement("CREATE TABLE data ( userID INTEGER AUTO_INCREMENT, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, " + 
                 "userSocialMediaUsage INTEGER, userPercentOfSocialMedia REAL, userProductivityAppUsage REAL, " +
                 "userPercentOfProductivityAppUsage REAL, userGamingAppUsage REAL, userPercentOfGamingAppUsage REAL, " +
                 "userCity TEXT, resultState TEXT, resultCountry TEXT, PRIMARY KEY (userID));");
@@ -103,6 +105,7 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
 
             for (CSVRecord csvRecord : dataParser) {    
                 // Insert row into mytable (pattern of filled in variables done by ChatGPT)
+                ps.close();
                 ps = con.prepareStatement("INSERT INTO mytable VALUES ("
                     + "NULL, "                                              // Primary key
                     + csvRecord.get(0) + ", '"                  // User age (INTEGER)
