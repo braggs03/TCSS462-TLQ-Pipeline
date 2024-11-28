@@ -86,13 +86,13 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
             String password = properties.getProperty("password");
             Connection con = DriverManager.getConnection(url,username,password);
 
-            // Detect if the table 'mytable' exists in the database
+            // Detect if the table 'data' exists in the database
             PreparedStatement ps = con.prepareStatement("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'mobiledata' AND table_name = 'data');");
             ResultSet rs = ps.executeQuery();
             rs.next();
             if (!rs.getBoolean(1))
             {
-                // 'mytable' does not exist, and should be created
+                // 'data' does not exist, and should be created
                 logger.log("trying to create table 'data'");
                 ps.close();
                 ps = con.prepareStatement("CREATE TABLE data ( userID INTEGER AUTO_INCREMENT, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, " + 
@@ -104,9 +104,9 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
             rs.close();
 
             for (CSVRecord csvRecord : dataParser) {    
-                // Insert row into mytable (pattern of filled in variables done by ChatGPT)
+                // Insert row into 'data' (pattern of filled in variables done by ChatGPT)
                 ps.close();
-                ps = con.prepareStatement("INSERT INTO mytable VALUES ("
+                ps = con.prepareStatement("INSERT INTO data VALUES ("
                     + "NULL, "                                              // Primary key
                     + csvRecord.get(0) + ", '"                  // User age (INTEGER)
                     + csvRecord.get(1) + "', "               // User gender (TEXT)
