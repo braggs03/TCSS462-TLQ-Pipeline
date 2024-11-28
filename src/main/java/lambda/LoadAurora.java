@@ -50,6 +50,11 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
         final String filename = (String) requestParameters.get("key");
 
         // Retrieve and the access the file from S3.
+        logger.log("Bucket Name: " + bucketname);
+        logger.log("File Name: " + filename);
+        System.out.println("Bucket Name: " + bucketname);
+        System.out.println("File Name: " + filename);
+
         final AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
         final S3Object s3Object = s3Client.getObject(new GetObjectRequest(bucketname, filename));
         final InputStream objectData = s3Object.getObjectContent();
