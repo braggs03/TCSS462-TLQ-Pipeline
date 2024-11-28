@@ -8,33 +8,20 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.FileInputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Scanner;
-import java.util.UUID;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpStatus;
-import org.json.JSONObject;
 import saaf.Inspector;
 
 public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
@@ -69,7 +56,7 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
         // Create a CSVParser on the S3 file.
         final CSVParser dataParser;
         try {
-            dataParser = CSVParser.parse(objectData, Charset.defaultCharset(), CSVFormat.DEFAULT.builder().setHeader().build());
+            dataParser = CSVParser.parse(objectData, Charset.defaultCharset(), CSVFormat.DEFAULT);
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
