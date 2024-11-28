@@ -93,10 +93,10 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
             {
                 // 'mytable' does not exist, and should be created
                 logger.log("trying to create table 'mytable'");
-                ps = con.prepareStatement("CREATE TABLE mytable ( userID INTEGER, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, " + 
+                ps = con.prepareStatement("CREATE TABLE mytable ( userID INTEGER AUTO_INCREMENT, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, " + 
                 "userSocialMediaUsage INTEGER, userPercentOfSocialMedia REAL, userProductivityAppUsage REAL, " +
                 "userPercentOfProductivityAppUsage REAL, userGamingAppUsage REAL, userPercentOfGamingAppUsage REAL, " +
-                "userCity TEXT, resultState TEXT, resultCountry TEXT);");
+                "userCity TEXT, resultState TEXT, resultCountry TEXT, PRIMARY KEY (userID));");
                 ps.execute();
             }
             rs.close();
@@ -105,18 +105,18 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
                 // Insert row into mytable (pattern of filled in variables done by ChatGPT)
                 ps = con.prepareStatement("INSERT INTO mytable VALUES ("
                     + "NULL, "                                              // Primary key
-                    + csvRecord.get("userAge") + ", '"                  // User age (INTEGER)
-                    + csvRecord.get("userGender") + "', "               // User gender (TEXT)
-                    + csvRecord.get("userNumberOfApps") + ", "          // Number of apps (INTEGER)
-                    + csvRecord.get("userSocialMediaUsage") + ", "      // Social media usage (INTEGER)
-                    + csvRecord.get("userPercentOfSocialMedia") + ", "  // Percent of social media usage (REAL)
-                    + csvRecord.get("userProductivityAppUsage") + ", "  // Productivity app usage (REAL)
-                    + csvRecord.get("userPercentOfProductivityAppUsage") + ", "  // Percent of productivity app usage (REAL)
-                    + csvRecord.get("userGamingAppUsage") + ", "        // Gaming app usage (REAL)
-                    + csvRecord.get("userPercentOfGamingAppUsage") + ", "  // Percent of gaming app usage (REAL)
-                    + "'" + csvRecord.get("userCity") + "', '"          // User city (TEXT)
-                    + csvRecord.get("resultState") + "', '"             // Result state (TEXT)
-                    + csvRecord.get("resultCountry") + "')");           // Result country (TEXT)
+                    + csvRecord.get(0) + ", '"                  // User age (INTEGER)
+                    + csvRecord.get(1) + "', "               // User gender (TEXT)
+                    + csvRecord.get(2) + ", "          // Number of apps (INTEGER)
+                    + csvRecord.get(3) + ", "      // Social media usage (INTEGER)
+                    + csvRecord.get(4) + ", "  // Percent of social media usage (REAL)
+                    + csvRecord.get(5) + ", "  // Productivity app usage (REAL)
+                    + csvRecord.get(6) + ", "  // Percent of productivity app usage (REAL)
+                    + csvRecord.get(7) + ", "        // Gaming app usage (REAL)
+                    + csvRecord.get(8) + ", "  // Percent of gaming app usage (REAL)
+                    + "'" + csvRecord.get(9) + "', '"          // User city (TEXT)
+                    + csvRecord.get(10) + "', '"             // Result state (TEXT)
+                    + csvRecord.get(11) + "')");           // Result country (TEXT)
                 ps.execute();
             }
 
