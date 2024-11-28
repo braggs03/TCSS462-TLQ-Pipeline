@@ -55,33 +55,48 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
         System.out.println("Bucket Name: " + bucketname);
         System.out.println("File Name: " + filename);
 
-        final AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
+        AmazonS3 s3Client = null;
+        try {
+            logger.log("Initializing Amazon S3 client...");
+            s3Client = AmazonS3ClientBuilder.standard().build();
+            logger.log("Amazon S3 client initialized successfully.");
+        } catch (Exception e) {
+            logger.log("Failed to initialize Amazon S3 client: " + e.getMessage());
+            throw e;
+        }
+        logger.log("trying to get object");
         final S3Object s3Object = s3Client.getObject(new GetObjectRequest(bucketname, filename));
+        logger.log("trying to get object data");
         final InputStream objectData = s3Object.getObjectContent();
 
+
+        logger.log("trying to parse csv");
         // Create a CSVParser on the S3 file.
         final CSVParser dataParser;
         try {
             dataParser = CSVParser.parse(objectData, Charset.defaultCharset(), CSVFormat.DEFAULT);
+            logger.log("csv parsed");
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
-
-        // Delete S3 file.
-        s3Client.deleteObject(new DeleteObjectRequest(bucketname, filename));
         
         try
         {
+            logger.log("Inside try catch block.");
             Properties properties = new Properties();
+            logger.log("opening dp properties.");
             properties.load(new FileInputStream("db.properties"));
+            logger.log("url.");
             String url = properties.getProperty("url");
+            logger.log("username.");
             String username = properties.getProperty("username");
+            logger.log("password.");
             String password = properties.getProperty("password");
             Connection con = null;
             try {
+                logger.log("trying to connect to db.");
                 con = DriverManager.getConnection(url, username, password);
                 logger.log("Connected to DB");
-                System.out.println("Connected to DB");
             } catch (SQLException e) {
                 logger.log("Connect failed: " + e.getMessage());
                 System.out.println("Connect failed: " + e.getMessage());
@@ -148,6 +163,16 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
             logger.log(e.getMessage());
             System.out.println(e.getMessage());
         }
+
+        try {
+            dataParser.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Delete S3 file.
+        s3Client.deleteObject(new DeleteObjectRequest(bucketname, filename));
+
         //****************END FUNCTION IMPLEMENTATION***************************
         
         //Collect final information such as total runtime and cpu deltas.
