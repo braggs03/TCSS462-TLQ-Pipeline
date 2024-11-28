@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -71,7 +72,15 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
             String url = properties.getProperty("url");
             String username = properties.getProperty("username");
             String password = properties.getProperty("password");
-            Connection con = DriverManager.getConnection(url,username,password);
+            Connection con = null;
+            try {
+                con = DriverManager.getConnection(url, username, password);
+                logger.log("Connected to DB");
+                System.out.println("Connected to DB");
+            } catch (SQLException e) {
+                logger.log("Connect failed: " + e.getMessage());
+                System.out.println("Connect failed: " + e.getMessage());
+            }
 
             // Detect if the table 'data' exists in the database
             PreparedStatement ps = con.prepareStatement("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'mobiledata' AND table_name = 'data');");
@@ -81,12 +90,15 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
             {
                 // 'data' does not exist, and should be created
                 logger.log("trying to create table 'data'");
+                System.out.println("trying to create table 'data'");
                 ps.close();
-                ps = con.prepareStatement("CREATE TABLE data ( userID INTEGER AUTO_INCREMENT, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, " + 
+                ps = con.prepareStatement("CREATE TABLE data (userID INTEGER AUTO_INCREMENT, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, " + 
                 "userSocialMediaUsage INTEGER, userPercentOfSocialMedia REAL, userProductivityAppUsage REAL, " +
                 "userPercentOfProductivityAppUsage REAL, userGamingAppUsage REAL, userPercentOfGamingAppUsage REAL, " +
                 "userCity TEXT, resultState TEXT, resultCountry TEXT, PRIMARY KEY (userID));");
                 ps.execute();
+                logger.log("created table 'data'");
+                System.out.println("created table 'data'");
             }
             rs.close();
 
@@ -110,6 +122,7 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
                 ps.execute();
             }
 
+            ps.close();
             rs.close();
             con.close();  
             
@@ -126,7 +139,9 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashM
         catch (Exception e) 
         {
             logger.log("Got an exception working with MySQL! ");
+            System.out.println("Got an exception working with MySQL! ");
             logger.log(e.getMessage());
+            System.out.println(e.getMessage());
         }
         //****************END FUNCTION IMPLEMENTATION***************************
         
