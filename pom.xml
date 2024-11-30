@@ -3,9 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>uwt</groupId>
     <artifactId>TCSS462-TLQ-Pipeline</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <packaging>jar</packaging>
-    <name>java_template</name>
     <dependencies>
         <dependency>
             <groupId>com.amazonaws</groupId>
@@ -32,12 +31,12 @@
             <artifactId>json</artifactId>
             <version>20240303</version>
         </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.28</version>
+        </dependency>
     </dependencies>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-    </properties>
   <build>
     <plugins>
       <plugin>
@@ -56,33 +55,12 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <configuration>
-                <archive>
-                    <manifest>
-                        <mainClass>fully.qualified.MainClass</mainClass>
-                    </manifest>
-                </archive>
-                <descriptorRefs>
-                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                </descriptorRefs>
-            </configuration>
-       </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-                <source>8</source>
-                <target>8</target>
-            </configuration>
-        </plugin>
     </plugins>
     <resources>
         <resource>
             <directory>src/main/resources</directory>
             <includes>
-                <include>**/*.jpg</include>
+                <include>*</include>
             </includes>
         </resource>
     </resources>

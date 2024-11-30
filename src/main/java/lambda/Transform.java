@@ -43,12 +43,12 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
     private static final String API_KEY = "e6bc8eff15f74c6d928a897a0264635f";
 
     /** The S3 bucket for the transformed CSV file to be put. */
-    private static final String PUT_BUCKET = "load.bucket.mam";
+    private static final String PUT_BUCKET = "load.tlq";
 
     /**
      * Handler for the AWS lambda function. Automatically triggered by a Cloud-Watch event.
      * @param request The generated request from AWS. Must include a bucketname and filename property for the csv to be transformed.
-     * @param context The generated context from AWS.
+     * @param context The generated context from AWS.       
      * @return The state of this lambda function container.
      */
     public HashMap<String, Object> handleRequest(

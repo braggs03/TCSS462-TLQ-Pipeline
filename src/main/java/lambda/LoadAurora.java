@@ -23,153 +23,126 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import saaf.Inspector;
 
-public class LoadAurora implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
+/**
+ * Load lambda function as part of the Transform-Load-Query pipeline for TCSS-462.
+ * This lambda function is automatically invoked via a Cloud-Watch
+ * event when a file is placed in the correct S3 bucket.
+ * This function loads the transformed file given by
+ * the S3 bucket event into the proper Aurora RDS.
+ *
+ * @author Brandon Ragghianti
+ * @author Michael
+ * @author Tyler
+ * @author Gabriel Stupart
+ * @version 1.0
+ */
+public class LoadAurora implements RequestHandler<HashMap<String, Object>,
+                                                  HashMap<String, Object>> {
 
     /**
      * Handler for the AWS lambda function. Automatically triggered by a Cloud-Watch event.
-     * @param request The generated request from AWS. Must include a bucketname and filename property for the csv to be loaded.
+     * @param request The generated request from AWS. Must include a bucketname
+     *                and filename property for the csv to be loaded.
      * @param context The generated context from AWS.
      * @return The state of this lambda function container.
      */
     public HashMap<String, Object> handleRequest(
             final HashMap<String, Object> request, final Context context
     ) {
-        LambdaLogger logger = context.getLogger();
 
         //Collect initial data.
-        Inspector inspector = new Inspector();
+        final Inspector inspector = new Inspector();
         inspector.inspectAll();
 
         //****************START FUNCTION IMPLEMENTATION*************************
 
+        final LambdaLogger logger = context.getLogger();
+
         // Retrieve the bucketname and filename from the S3 event JSON.
         final HashMap<?, ?> requestParameters = (HashMap<?, ?>) ((HashMap<?, ?>) request.get("detail")).get("requestParameters");
-        final String bucketname = (String) requestParameters.get("bucketName");
+        final String bucket_name = (String) requestParameters.get("bucketName");
         final String filename = (String) requestParameters.get("key");
 
-        // Retrieve and the access the file from S3.
-        logger.log("Bucket Name: " + bucketname);
-        logger.log("File Name: " + filename);
-        System.out.println("Bucket Name: " + bucketname);
-        System.out.println("File Name: " + filename);
-
-        AmazonS3 s3Client = null;
-        try {
-            logger.log("Initializing Amazon S3 client...");
-            s3Client = AmazonS3ClientBuilder.standard().build();
-            logger.log("Amazon S3 client initialized successfully.");
-        } catch (Exception e) {
-            logger.log("Failed to initialize Amazon S3 client: " + e.getMessage());
-            throw e;
-        }
-        logger.log("trying to get object");
-        final S3Object s3Object = s3Client.getObject(new GetObjectRequest(bucketname, filename));
-        logger.log("trying to get object data");
+        // Retrieve the file from S3.
+        final AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
+        final S3Object s3Object = s3Client.getObject(
+                                    new GetObjectRequest(bucket_name, filename));
         final InputStream objectData = s3Object.getObjectContent();
 
-
-        logger.log("trying to parse csv");
         // Create a CSVParser on the S3 file.
         final CSVParser dataParser;
         try {
             dataParser = CSVParser.parse(objectData, Charset.defaultCharset(), CSVFormat.DEFAULT);
-            logger.log("csv parsed");
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
-        
-        try
-        {
-            logger.log("Inside try catch block.");
-            Properties properties = new Properties();
-            logger.log("opening dp properties.");
-            properties.load(LoadAurora.class.getClassLoader().getResourceAsStream("/db.properties"));
-            logger.log("url.");
-            String url = properties.getProperty("url");
-            logger.log("username.");
-            String username = properties.getProperty("username");
-            logger.log("password.");
-            String password = properties.getProperty("password");
-            Connection con = null;
-            try {
-                logger.log("trying to connect to db.");
-                con = DriverManager.getConnection(url, username, password);
-                logger.log("Connected to DB");
-            } catch (SQLException e) {
-                logger.log("Connect failed: " + e.getMessage());
-                System.out.println("Connect failed: " + e.getMessage());
-            }
 
-            // Detect if the table 'data' exists in the database
-            PreparedStatement ps = con.prepareStatement("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'mobiledata' AND table_name = 'data');");
-            ResultSet rs = ps.executeQuery();
-            rs.next();
-            if (!rs.getBoolean(1))
-            {
-                // 'data' does not exist, and should be created
-                logger.log("trying to create table 'data'");
-                System.out.println("trying to create table 'data'");
-                ps.close();
-                ps = con.prepareStatement("CREATE TABLE data (userID INTEGER AUTO_INCREMENT, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, " + 
-                "userSocialMediaUsage INTEGER, userPercentOfSocialMedia REAL, userProductivityAppUsage REAL, " +
-                "userPercentOfProductivityAppUsage REAL, userGamingAppUsage REAL, userPercentOfGamingAppUsage REAL, " +
-                "userCity TEXT, resultState TEXT, resultCountry TEXT, PRIMARY KEY (userID));");
-                ps.execute();
-                logger.log("created table 'data'");
-                System.out.println("created table 'data'");
-            }
-            rs.close();
-
-            for (CSVRecord csvRecord : dataParser) {    
-                // Insert row into 'data' (pattern of filled in variables done by ChatGPT)
-                ps.close();
-                ps = con.prepareStatement("INSERT INTO data VALUES ("
-                    + "NULL, "                                              // Primary key
-                    + csvRecord.get(0) + ", '"                  // User age (INTEGER)
-                    + csvRecord.get(1) + "', "               // User gender (TEXT)
-                    + csvRecord.get(2) + ", "          // Number of apps (INTEGER)
-                    + csvRecord.get(3) + ", "      // Social media usage (INTEGER)
-                    + csvRecord.get(4) + ", "  // Percent of social media usage (REAL)
-                    + csvRecord.get(5) + ", "  // Productivity app usage (REAL)
-                    + csvRecord.get(6) + ", "  // Percent of productivity app usage (REAL)
-                    + csvRecord.get(7) + ", "        // Gaming app usage (REAL)
-                    + csvRecord.get(8) + ", "  // Percent of gaming app usage (REAL)
-                    + "'" + csvRecord.get(9) + "', '"          // User city (TEXT)
-                    + csvRecord.get(10) + "', '"             // Result state (TEXT)
-                    + csvRecord.get(11) + "')");           // Result country (TEXT)
-                ps.execute();
-            }
-
-            ps.close();
-            rs.close();
-            con.close();  
-            
-            // // sleep to ensure that concurrent calls obtain separate Lambdas
-            // try
-            // {
-            //     Thread.sleep(200);
-            // }
-            // catch (InterruptedException ie)
-            // {
-            //     logger.log("interrupted while sleeping...");
-            // }
-        }
-        catch (Exception e) 
-        {
-            logger.log("Got an exception working with MySQL! ");
-            System.out.println("Got an exception working with MySQL! ");
-            logger.log(e.getMessage());
-            System.out.println(e.getMessage());
-        }
-
+        // Load db.properties and the required properties.
+        final Properties properties = new Properties();
         try {
-            dataParser.close();
-        } catch (IOException e) {
+            properties.load(getClass().getClassLoader().getResourceAsStream("db.properties"));
+        } catch (final IOException e) {
+            logger.log("Failed to load db.properties: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+        final String url = properties.getProperty("url");
+        final String username = properties.getProperty("username");
+        final String password = properties.getProperty("password");
+
+        // Connect to the database.
+        final Connection con;
+        try {
+            con = DriverManager.getConnection(url, username, password);
+        } catch (final SQLException e) {
+            logger.log("Database connection failed: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+        // Detect if the table 'data' exists in the database
+        try {
+            final PreparedStatement db_table_check = con.prepareStatement("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'mobiledata' AND table_name = 'data');");
+            final ResultSet db_table_rs = db_table_check.executeQuery();
+            db_table_rs.next();
+            if (!db_table_rs.getBoolean(1)) {
+                final PreparedStatement db_table_create = con.prepareStatement(
+                        "CREATE TABLE data (userID INTEGER AUTO_INCREMENT, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, "
+                        + "userSocialMediaUsage INTEGER, userPercentOfSocialMedia REAL, userProductivityAppUsage REAL, "
+                        + "userPercentOfProductivityAppUsage REAL, userGamingAppUsage REAL, userPercentOfGamingAppUsage REAL, "
+                        + "userCity TEXT, resultState TEXT, resultCountry TEXT, PRIMARY KEY (userID));");
+                db_table_create.execute();
+                db_table_create.close();
+            }
+            db_table_check.close();
+            db_table_rs.close();
+        } catch (final SQLException e) {
+            logger.log("Failed to check/create the database data table: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+        // Insert all data into the database.
+        try {
+            final PreparedStatement db_table_insert = con.prepareStatement("INSERT INTO data (userAge, userGender, userNumberOfApps, userSocialMediaUsage, userPercentOfSocialMedia, userProductivityAppUsage, userPercentOfProductivityAppUsage, userGamingAppUsage, userPercentOfGamingAppUsage, userCity, resultState, resultCountry) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+            for (CSVRecord csvRecord : dataParser) {
+                db_table_insert.setString(1, csvRecord.get(0));
+                db_table_insert.setString(2, csvRecord.get(1));
+                db_table_insert.setString(3, csvRecord.get(2));
+                db_table_insert.setString(4, csvRecord.get(3));
+                db_table_insert.setString(5, csvRecord.get(4));
+                db_table_insert.setString(6, csvRecord.get(5));
+                db_table_insert.setString(7, csvRecord.get(6));
+                db_table_insert.setString(8, csvRecord.get(7));
+                db_table_insert.setString(9, csvRecord.get(8));
+                db_table_insert.setString(10, csvRecord.get(9));
+                db_table_insert.setString(11, csvRecord.get(10));
+                db_table_insert.setString(12, csvRecord.get(11));
+            }
+        } catch (final SQLException e) {
+            logger.log("Failed to insert data: " + e.getMessage());
             throw new RuntimeException(e);
         }
 
         // Delete S3 file.
-        s3Client.deleteObject(new DeleteObjectRequest(bucketname, filename));
+        s3Client.deleteObject(new DeleteObjectRequest(bucket_name, filename));
 
         //****************END FUNCTION IMPLEMENTATION***************************
         
