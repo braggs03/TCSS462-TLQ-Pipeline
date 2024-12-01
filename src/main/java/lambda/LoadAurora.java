@@ -105,10 +105,10 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
             db_table_rs.next();
             if (!db_table_rs.getBoolean(1)) {
                 final PreparedStatement db_table_create = con.prepareStatement(
-                        "CREATE TABLE data (userID INTEGER AUTO_INCREMENT, userAge INTEGER, userGender TEXT, userNumberOfApps INTEGER, "
-                        + "userSocialMediaUsage INTEGER, userPercentOfSocialMedia REAL, userProductivityAppUsage REAL, "
+                        "CREATE TABLE data (userID INTEGER AUTO_INCREMENT, userAge REAL, userGender TEXT, userNumberOfApps INTEGER, "
+                        + "userSocialMediaUsage REAL, userPercentOfSocialMedia REAL, userProductivityAppUsage REAL, "
                         + "userPercentOfProductivityAppUsage REAL, userGamingAppUsage REAL, userPercentOfGamingAppUsage REAL, "
-                        + "userCity TEXT, resultState TEXT, resultCountry TEXT, PRIMARY KEY (userID));");
+                        + "userTotalAppUsage REAL, userCity TEXT, resultState TEXT, resultCountry TEXT, PRIMARY KEY (userID));");
                 db_table_create.execute();
                 db_table_create.close();
             }
@@ -121,7 +121,7 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
 
         // Insert all data into the database.
         try {
-            final PreparedStatement db_table_insert = con.prepareStatement("INSERT INTO data (userAge, userGender, userNumberOfApps, userSocialMediaUsage, userPercentOfSocialMedia, userProductivityAppUsage, userPercentOfProductivityAppUsage, userGamingAppUsage, userPercentOfGamingAppUsage, userCity, resultState, resultCountry) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+            final PreparedStatement db_table_insert = con.prepareStatement("INSERT INTO data (userAge, userGender, userNumberOfApps, userSocialMediaUsage, userPercentOfSocialMedia, userProductivityAppUsage, userPercentOfProductivityAppUsage, userGamingAppUsage, userPercentOfGamingAppUsage, userTotalAppUsage, userCity, resultState, resultCountry) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
             for (CSVRecord csvRecord : dataParser) {
                 db_table_insert.setString(1, csvRecord.get(0));
                 db_table_insert.setString(2, csvRecord.get(1));
@@ -135,6 +135,8 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
                 db_table_insert.setString(10, csvRecord.get(9));
                 db_table_insert.setString(11, csvRecord.get(10));
                 db_table_insert.setString(12, csvRecord.get(11));
+                db_table_insert.setString(13, csvRecord.get(12));
+                db_table_insert.execute();
             }
         } catch (final SQLException e) {
             logger.log("Failed to insert data: " + e.getMessage());

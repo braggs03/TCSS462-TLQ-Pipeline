@@ -1,20 +1,21 @@
 package lambda;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
+
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.SQLOutput;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -45,6 +46,12 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
     /** The S3 bucket for the transformed CSV file to be put. */
     private static final String PUT_BUCKET = "load.tlq";
 
+    /** The S3 bucket for the recurring cities serialized object. */
+    private static final String RECURRING_CITIES_BUCKET = "recurring-cities.tlq";
+
+    /** The file name of the recurring cities serialized object. */
+    private static final String RECURRING_CITIES_FILENAME = "recurring-cities";
+
     /**
      * Handler for the AWS lambda function. Automatically triggered by a Cloud-Watch event.
      * @param request The generated request from AWS. Must include a bucketname and filename property for the csv to be transformed.
@@ -61,6 +68,8 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
         inspector.inspectAll();
 
         //****************START FUNCTION IMPLEMENTATION*************************
+
+        LambdaLogger logger = context.getLogger();
 
         // Retrieve the bucketname and filename from the S3 event JSON.
         final HashMap<?, ?> requestParameters = (HashMap<?, ?>) ((HashMap<?, ?>) request.get("detail")).get("requestParameters");
@@ -81,7 +90,26 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
         }
 
         // Caches already queried cities.
-        final Map<String, CacheLocation> recurringCities = new HashMap<>();
+        final Map<String, CacheLocation> recurringCities;
+        if (s3Client.doesObjectExist(RECURRING_CITIES_BUCKET, RECURRING_CITIES_FILENAME)) {
+            final InputStream serializedRecurringCities = s3Client.getObject(new GetObjectRequest(RECURRING_CITIES_BUCKET, RECURRING_CITIES_FILENAME)).getObjectContent();
+            try {
+                final ObjectInputStream serializedRecurringCitiesObjectStream = new ObjectInputStream(serializedRecurringCities);
+                recurringCities = (HashMap<String, CacheLocation>) serializedRecurringCitiesObjectStream.readObject();
+                serializedRecurringCitiesObjectStream.close();
+            } catch (final IOException | ClassNotFoundException e) {
+                logger.log("Could not deserialize recurring cities: " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+            try {
+                serializedRecurringCities.close();
+            } catch (final IOException e) {
+                logger.log("Could not close retrieved S3 object: " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+        } else {
+            recurringCities = new HashMap<>();
+        }
 
         // Buffered writer for writing to /tmp on Lambda instance.
         final String tmpFileName = String.format("/tmp/%s", filename);
@@ -124,6 +152,27 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
 
         // Delete tmpFile from /tmp.
         if (!tmpFile.delete()) {
+            System.err.println("Failed to delete temporary file: " + tmpFileName);
+        }
+
+        final String recurringCitiesFileLocation = String.format("/tmp/%s", RECURRING_CITIES_FILENAME);
+        try {
+            final FileOutputStream recurringCitiesOutput = new FileOutputStream(recurringCitiesFileLocation);
+            final ObjectOutputStream recurringCitiesOutputStream = new ObjectOutputStream(recurringCitiesOutput);
+            recurringCitiesOutputStream.writeObject(recurringCities);
+            recurringCitiesOutputStream.close();
+            recurringCitiesOutput.close();
+        } catch (final IOException e) {
+            logger.log("Could not properly write recurring cities: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+        final File recurringCitiesFile = new File(recurringCitiesFileLocation);
+
+        s3Client.putObject(RECURRING_CITIES_BUCKET, RECURRING_CITIES_FILENAME, recurringCitiesFile);
+
+        // Delete tmpFile from /tmp.
+        if (!recurringCitiesFile.delete()) {
             System.err.println("Failed to delete temporary file: " + tmpFileName);
         }
 
@@ -206,10 +255,12 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
         }
 
         // All necessary data has been retrieved, build completed String.
-        return String.format("%s,%s,%s,%s,%.2f,%s,%.2f,%s,%.2f,%s,%s,%s\n", userAge, userGender, userNumberOfApps, userSocialMediaUsage, userPercentOfSocialMedia, userProductivityAppUsage, userPercentOfProductivityAppUsage, userGamingAppUsage, userPercentOfGamingAppUsage, userCity, resultState, resultCountry);
+        return String.format("%s,%s,%s,%s,%.2f,%s,%.2f,%s,%.2f,%.2f,%s,%s,%s\n", userAge, userGender, userNumberOfApps, userSocialMediaUsage, userPercentOfSocialMedia, userProductivityAppUsage, userPercentOfProductivityAppUsage, userGamingAppUsage, userPercentOfGamingAppUsage, userTotalAppUsage, userCity, resultState, resultCountry);
     }
 
-    private static class CacheLocation {
+    private static class CacheLocation implements Serializable {
+
+        private static final long serialVersionUID = 3624983666763181265L;
 
         /** The State for the cached city. */
         private final String state;
