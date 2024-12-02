@@ -88,8 +88,7 @@ public class Query implements RequestHandler<HashMap<String, Object>, HashMap<St
             sqlQuery.append(" GROUP BY ");
             for (int i = 0; i < group.length(); i++) {
                 final String value = group.getString(i);
-                values.add(value);
-                sqlQuery.append("?");
+                sqlQuery.append(value);
                 if (i != group.length() - 1) {
                     sqlQuery.append(", ");
                 }
@@ -121,7 +120,7 @@ public class Query implements RequestHandler<HashMap<String, Object>, HashMap<St
             throw new RuntimeException(e);
         }
 
-        final ArrayList<JSONObject> result = new ArrayList<>();
+        final ArrayList<HashMap<String, Object>> jsonResult = new ArrayList<>();
         try {
             final PreparedStatement dbTableSelect = con.prepareStatement(sqlQuery.toString());
             for (int i = 0; i < values.size(); i++) {
@@ -131,19 +130,18 @@ public class Query implements RequestHandler<HashMap<String, Object>, HashMap<St
             final ResultSetMetaData rsmd = rs.getMetaData();
             while (rs.next()) {
                 final int numColumns = rsmd.getColumnCount();
-                final JSONObject obj = new JSONObject();
+                final HashMap<String, Object> row = new HashMap<>();
                 for (int i = 1; i <= numColumns; i++) {
                     final String columnName = rsmd.getColumnName(i);
-                    obj.put(columnName, rs.getObject(columnName));
+                    row.put(columnName, rs.getObject(columnName));
                 }
-                logger.log(obj.toString());
-                result.add(obj);
+                jsonResult.add(row);
             }
         } catch (final SQLException e) {
             System.out.println("Failed to query database:");
             throw new RuntimeException(e);
         }
-        inspector.addAttribute("entries", result);
+        inspector.addAttribute("entries", jsonResult);
 
         //****************END FUNCTION IMPLEMENTATION***************************
 
@@ -209,8 +207,7 @@ public class Query implements RequestHandler<HashMap<String, Object>, HashMap<St
             sqlQuery.append(" GROUP BY ");
             for (int i = 0; i < group.length(); i++) {
                 final String value = group.getString(i);
-                values.add(value);
-                sqlQuery.append("?");
+                sqlQuery.append(value);
                 if (i != group.length() - 1) {
                     sqlQuery.append(", ");
                 }
