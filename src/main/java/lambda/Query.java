@@ -129,7 +129,7 @@ public class Query implements RequestHandler<HashMap<String, Object>, HashMap<St
             System.out.println("Failed to query database:");
             throw new RuntimeException(e);
         }
-        inspector.addAttribute("entries", jsonResult);
+        inspector.addAttribute("entries", jsonResult.toString());
 
         //****************END FUNCTION IMPLEMENTATION***************************
 
