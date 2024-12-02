@@ -90,8 +90,9 @@ public class Query implements RequestHandler<HashMap<String, Object>, HashMap<St
         // Load db.properties and the required properties.
         final Properties properties = new Properties();
         try {
-            properties.load(Files.newInputStream(new File("src/main/resources/db.properties").toPath()));
+            properties.load(getClass().getClassLoader().getResourceAsStream("db.properties"));
         } catch (final IOException e) {
+            logger.log("Failed to load db.properties: " + e.getMessage());
             throw new RuntimeException(e);
         }
         final String url = properties.getProperty("url");
@@ -107,7 +108,7 @@ public class Query implements RequestHandler<HashMap<String, Object>, HashMap<St
             throw new RuntimeException(e);
         }
 
-        JSONArray jsonResult = null;
+        final JSONArray jsonResult = new JSONArray();
         try {
             final PreparedStatement dbTableSelect = con.prepareStatement(sqlQuery.toString());
             for (int i = 0; i < values.size(); i++) {
