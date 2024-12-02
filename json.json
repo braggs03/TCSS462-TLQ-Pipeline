@@ -1,10 +1,18 @@
 {
   "aggregations": [
-    {"column": "totalTime", "function": "AVG"},
-    {"column": "userGamingAppUsage", "function": "SUM"}
+    {
+      "column": "userTotalAppUsage",
+      "function": "AVG"
+    }
   ],
   "filters": [
-    {"column": "userCountry", "value": "United States"},
-    {"column": "userState", "value": "ALaska"}
+    {
+      "column": "resultCountry",
+      "value": "United States"
+    }
+  ],
+  "group": [
+    "userCity",
+    "resultState"
   ]
 }
