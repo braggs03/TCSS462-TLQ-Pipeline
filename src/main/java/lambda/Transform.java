@@ -41,7 +41,7 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
                                                  HashMap<String, Object>> {
 
     /** API key for the OpenGate API */
-    private static final String API_KEY = "e6bc8eff15f74c6d928a897a0264635f";
+    private static final String API_KEY = "";
 
     /** The S3 bucket for the transformed CSV file to be put. */
     private static final String PUT_BUCKET = "load.tlq";
