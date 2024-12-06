@@ -121,23 +121,29 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
 
         // Insert all data into the database.
         try {
-            final PreparedStatement db_table_insert = con.prepareStatement("INSERT INTO data (userAge, userGender, userNumberOfApps, userSocialMediaUsage, userPercentOfSocialMedia, userProductivityAppUsage, userPercentOfProductivityAppUsage, userGamingAppUsage, userPercentOfGamingAppUsage, userTotalAppUsage, userCity, resultState, resultCountry) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            StringBuilder sb = new StringBuilder("INSERT INTO data (userAge, userGender, userNumberOfApps, userSocialMediaUsage, userPercentOfSocialMedia, userProductivityAppUsage, userPercentOfProductivityAppUsage, userGamingAppUsage, userPercentOfGamingAppUsage, userTotalAppUsage, userCity, resultState, resultCountry) VALUES");
             for (CSVRecord csvRecord : dataParser) {
-                db_table_insert.setString(1, csvRecord.get(0));
-                db_table_insert.setString(2, csvRecord.get(1));
-                db_table_insert.setString(3, csvRecord.get(2));
-                db_table_insert.setString(4, csvRecord.get(3));
-                db_table_insert.setString(5, csvRecord.get(4));
-                db_table_insert.setString(6, csvRecord.get(5));
-                db_table_insert.setString(7, csvRecord.get(6));
-                db_table_insert.setString(8, csvRecord.get(7));
-                db_table_insert.setString(9, csvRecord.get(8));
-                db_table_insert.setString(10, csvRecord.get(9));
-                db_table_insert.setString(11, csvRecord.get(10));
-                db_table_insert.setString(12, csvRecord.get(11));
-                db_table_insert.setString(13, csvRecord.get(12));
-                db_table_insert.execute();
+                sb.append(" (?,?,?,?,?,?,?,?,?,?,?,?,?)");
             }
+            final PreparedStatement db_table_insert = con.prepareStatement(sb.toString());
+            int count = 1;
+            for (CSVRecord csvRecord : dataParser) {
+                count = substitute(db_table_insert, count, 0, csvRecord);
+                count = substitute(db_table_insert, count, 1, csvRecord);
+                count = substitute(db_table_insert, count, 2, csvRecord);
+                count = substitute(db_table_insert, count, 3, csvRecord);
+                count = substitute(db_table_insert, count, 4, csvRecord);
+                count = substitute(db_table_insert, count, 5, csvRecord);
+                count = substitute(db_table_insert, count, 6, csvRecord);
+                count = substitute(db_table_insert, count, 7, csvRecord);
+                count = substitute(db_table_insert, count, 8, csvRecord);
+                count = substitute(db_table_insert, count, 9, csvRecord);
+                count = substitute(db_table_insert, count, 10, csvRecord);
+                count = substitute(db_table_insert, count, 11, csvRecord);
+                count = substitute(db_table_insert, count, 12, csvRecord);
+                count = substitute(db_table_insert, count, 13, csvRecord);
+            }
+
         } catch (final SQLException e) {
             logger.log("Failed to insert data: " + e.getMessage());
             throw new RuntimeException(e);
@@ -151,5 +157,11 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
         //Collect final information such as total runtime and cpu deltas.
         inspector.inspectAllDeltas();
         return inspector.finish();
+    }
+
+    private int substitute(final PreparedStatement db_table_insert, int count, int pos, CSVRecord csvRecord) throws SQLException {
+        db_table_insert.setString(count, csvRecord.get(pos));
+        count++;
+        return count;
     }
 }
