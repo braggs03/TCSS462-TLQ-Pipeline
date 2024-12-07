@@ -142,7 +142,7 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
                 count = substitute(db_table_insert, count, 11, csvRecord);
                 count = substitute(db_table_insert, count, 12, csvRecord);
             }
-            logger.log(sb.toString())
+            logger.log(sb.toString());
             db_table_insert.execute();
         } catch (final SQLException e) {
             logger.log("Failed to insert data: " + e.getMessage());
