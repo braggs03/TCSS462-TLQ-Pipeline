@@ -86,7 +86,6 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
             throw new RuntimeException(e);
         }
         final String url = properties.getProperty("url");
-        Integer.parseInt(properties.getProperty("port"));
         final String username = properties.getProperty("username");
         final String password = properties.getProperty("password");
 
