@@ -169,7 +169,6 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
     private int substitute(final PreparedStatement db_table_insert, int count, int pos, CSVRecord csvRecord) throws SQLException {
         db_table_insert.setString(count, csvRecord.get(pos));
         count++;
-        System.out.println(csvRecord.get(pos));
         return count;
     }
 }
