@@ -141,7 +141,6 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
                 count = substitute(db_table_insert, count, 10, csvRecord);
                 count = substitute(db_table_insert, count, 11, csvRecord);
                 count = substitute(db_table_insert, count, 12, csvRecord);
-                count = substitute(db_table_insert, count, 13, csvRecord);
             }
             db_table_insert.execute();
         } catch (final SQLException e) {
