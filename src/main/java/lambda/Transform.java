@@ -64,6 +64,7 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
         final Inspector inspector = new Inspector();
         inspector.inspectCPU();
         inspector.inspectMemory();
+        inspector.inspectContainer();
 
         //****************START FUNCTION IMPLEMENTATION*************************
 
