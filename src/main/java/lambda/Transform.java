@@ -232,11 +232,14 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
                     final JSONObject data = jsonObject.getJSONArray("results").getJSONObject(0).getJSONObject("components");
 
                     // Retrieve state and country.
-                    resultState = data.getString("state");
-                    resultCountry = data.getString("country");
+                    if (data.has("state")) {
+                        resultState = data.getString("state");
+                    }
+                    if (data.has("country")) {
+                        resultCountry = data.getString("country");
+                    }
 
                     // Input queried city and retrieved state and country into cache.
-                    recurringCities.put(userCity, new CacheLocation(resultState, resultCountry));
 
                 } else if (conn.getResponseCode() == HttpStatus.SC_UNAUTHORIZED) {
                     System.err.println("Invalid API Key");
@@ -251,6 +254,8 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
                 }
             } catch (final IOException e) {
                 System.err.println(e.getMessage());
+            } finally {
+                recurringCities.put(userCity, new CacheLocation(resultState, resultCountry));
             }
         }
 

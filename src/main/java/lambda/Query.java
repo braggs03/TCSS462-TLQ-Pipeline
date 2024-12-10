@@ -51,6 +51,13 @@ public class Query implements RequestHandler<HashMap<String, Object>, HashMap<St
         final StringBuilder sqlQuery = new StringBuilder("SELECT ");
 
         // Step 2: Parse the aggregations part of the json and add to select.
+        if (group != null && !group.isEmpty()) {
+            for (int i = 0; i < group.length(); i++) {
+                final String value = group.getString(i);
+                sqlQuery.append(value).append(", ");
+            }
+        }
+
         if (aggregations != null && !aggregations.isEmpty())  {
             for (int i = 0; i < aggregations.length(); i++) {
                 final JSONObject aggregation = aggregations.getJSONObject(i);
