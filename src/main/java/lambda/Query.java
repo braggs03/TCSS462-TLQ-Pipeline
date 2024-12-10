@@ -33,7 +33,8 @@ public class Query implements RequestHandler<HashMap<String, Object>, HashMap<St
 
         //Collect initial data.
         final Inspector inspector = new Inspector();
-        inspector.inspectAll();
+        inspector.inspectCPU();
+        inspector.inspectMemory();
 
         //****************START FUNCTION IMPLEMENTATION*************************
 
