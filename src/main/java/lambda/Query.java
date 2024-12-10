@@ -19,6 +19,19 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import saaf.Inspector;
 
+/**
+ * Query lambda function as part of the Transform-Load-Query pipeline for TCSS-462.
+ * This lambda function is invoked via a RESTful API Gateway.
+ * This function queries the 'data' table in the database specified by db.properties.
+ * The result is returned to the user along with CPU and Memory Deltas.
+ *
+ * @author Brandon Ragghianti
+ * @author Michael
+ * @author Tyler
+ * @author Gabriel Stupart
+ * @version 1.0
+ */
+
 public class Query implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
 
     /**
