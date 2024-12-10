@@ -65,7 +65,8 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
 
         //Collect initial data.
         final Inspector inspector = new Inspector();
-        inspector.inspectAll();
+        inspector.inspectCPU();
+        inspector.inspectMemory();
 
         //****************START FUNCTION IMPLEMENTATION*************************
 
