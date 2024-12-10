@@ -130,26 +130,39 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
 
         // Insert all data into the database.
         try {
+            con.setAutoCommit(false);
             final PreparedStatement db_table_insert = con.prepareStatement("INSERT INTO data (userAge, userGender, userNumberOfApps, userSocialMediaUsage, userPercentOfSocialMedia, userProductivityAppUsage, userPercentOfProductivityAppUsage, userGamingAppUsage, userPercentOfGamingAppUsage, userTotalAppUsage, userCity, resultState, resultCountry) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
             int batchSize = 1000; // Adjust the batch size based on your system's capability
             int count = 0;
 
             for (CSVRecord csvRecord : dataParser) {
-                int paramIndex = 1;
-                paramIndex = substitute(db_table_insert, paramIndex, 0, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 1, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 2, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 3, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 4, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 5, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 6, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 7, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 8, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 9, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 10, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 11, csvRecord);
-                paramIndex = substitute(db_table_insert, paramIndex, 12, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 0, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 1, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 2, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 3, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 4, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 5, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 6, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 7, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 8, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 9, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 10, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 11, csvRecord);
+                // paramIndex = substitute(db_table_insert, paramIndex, 12, csvRecord);
+                db_table_insert.setDouble(1, Double.parseDouble(csvRecord.get(0)));
+                db_table_insert.setString(2, csvRecord.get(1));
+                db_table_insert.setInt(3, Integer.parseInt(csvRecord.get(2)));
+                db_table_insert.setDouble(4, Double.parseDouble(csvRecord.get(3)));
+                db_table_insert.setDouble(5, Double.parseDouble(csvRecord.get(4)));
+                db_table_insert.setDouble(6, Double.parseDouble(csvRecord.get(5)));
+                db_table_insert.setDouble(7, Double.parseDouble(csvRecord.get(6)));
+                db_table_insert.setDouble(8, Double.parseDouble(csvRecord.get(7)));
+                db_table_insert.setDouble(9, Double.parseDouble(csvRecord.get(8)));
+                db_table_insert.setDouble(10, Double.parseDouble(csvRecord.get(9)));
+                db_table_insert.setString(11, csvRecord.get(10));
+                db_table_insert.setString(12, csvRecord.get(11));
+                db_table_insert.setString(13, csvRecord.get(12));
 
                 db_table_insert.addBatch();
                 count++;
@@ -175,9 +188,9 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
         return inspector.finish();
     }
 
-    private int substitute(final PreparedStatement db_table_insert, int count, int pos, CSVRecord csvRecord) throws SQLException {
-        db_table_insert.setString(count, csvRecord.get(pos));
-        count++;
-        return count;
-    }
+    // private int substitute(final PreparedStatement db_table_insert, int count, int pos, CSVRecord csvRecord) throws SQLException {
+    //     db_table_insert.setString(count, csvRecord.get(pos));
+    //     count++;
+    //     return count;
+    // }
 }
