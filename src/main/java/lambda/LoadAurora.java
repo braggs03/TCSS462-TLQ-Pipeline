@@ -1,5 +1,19 @@
 package lambda;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Properties;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -8,19 +22,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Properties;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
+
 import saaf.Inspector;
 
 /**
@@ -102,20 +104,25 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
 
         // Detect if the table 'data' exists in the database
         try {
-            final PreparedStatement db_table_check = con.prepareStatement("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'mobiledata' AND table_name = 'data');");
-            final ResultSet db_table_rs = db_table_check.executeQuery();
-            db_table_rs.next();
-            if (!db_table_rs.getBoolean(1)) {
-                final PreparedStatement db_table_create = con.prepareStatement(
-                        "CREATE TABLE data (userID INTEGER AUTO_INCREMENT, userAge REAL, userGender TEXT, userNumberOfApps INTEGER, "
-                        + "userSocialMediaUsage REAL, userPercentOfSocialMedia REAL, userProductivityAppUsage REAL, "
-                        + "userPercentOfProductivityAppUsage REAL, userGamingAppUsage REAL, userPercentOfGamingAppUsage REAL, "
-                        + "userTotalAppUsage REAL, userCity TEXT, resultState TEXT, resultCountry TEXT, PRIMARY KEY (userID));");
-                db_table_create.execute();
-                db_table_create.close();
-            }
-            db_table_check.close();
-            db_table_rs.close();
+            final PreparedStatement db_table_create = con.prepareStatement("CREATE TABLE IF NOT EXISTS data (" +
+            "userID INTEGER AUTO_INCREMENT, " +
+            "userAge REAL, " +
+            "userGender TEXT, " +
+            "userNumberOfApps INTEGER, " +
+            "userSocialMediaUsage REAL, " +
+            "userPercentOfSocialMedia REAL, " +
+            "userProductivityAppUsage REAL, " +
+            "userPercentOfProductivityAppUsage REAL, " +
+            "userGamingAppUsage REAL, " +
+            "userPercentOfGamingAppUsage REAL, " +
+            "userTotalAppUsage REAL, " +
+            "userCity TEXT, " +
+            "resultState TEXT, " +
+            "resultCountry TEXT, " +
+            "PRIMARY KEY (userID)" +
+            ")");
+            db_table_create.executeUpdate();
+            db_table_create.close();
         } catch (final SQLException e) {
             logger.log("Failed to check/create the database data table: " + e.getMessage());
             throw new RuntimeException(e);
