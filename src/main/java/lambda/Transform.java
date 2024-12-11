@@ -8,8 +8,15 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
-
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -231,11 +238,13 @@ public class Transform implements RequestHandler<HashMap<String, Object>,
                     final JSONObject data = jsonObject.getJSONArray("results").getJSONObject(0).getJSONObject("components");
 
                     // Retrieve state and country.
-                    if (data.has("state")) {
-                        resultState = data.getString("state");
+                    final String state = "state";
+                    final String country = "country";
+                    if (data.has(state)) {
+                        resultState = data.getString(state);
                     }
-                    if (data.has("country")) {
-                        resultCountry = data.getString("country");
+                    if (data.has(country)) {
+                        resultCountry = data.getString(country);
                     }
 
                     // Input queried city and retrieved state and country into cache.

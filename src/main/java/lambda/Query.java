@@ -3,18 +3,16 @@ package lambda;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Properties;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import saaf.Inspector;
@@ -31,8 +29,8 @@ import saaf.Inspector;
  * @author Gabriel Stupart
  * @version 1.0
  */
-
-public class Query implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
+public class Query implements RequestHandler<HashMap<String, Object>,
+                                             HashMap<String, Object>> {
 
     /**
      * Handler for the AWS lambda function. Automatically triggered by a Cloud-Watch event.
@@ -41,7 +39,8 @@ public class Query implements RequestHandler<HashMap<String, Object>, HashMap<St
      * @return The state of this lambda function container.
      */
     public HashMap<String, Object> handleRequest(
-            final HashMap<String, Object> request, final Context context
+            final HashMap<String, Object> request,
+            final Context context
     ) {
 
         //Collect initial data.

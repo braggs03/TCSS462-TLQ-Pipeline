@@ -47,7 +47,8 @@ public class LoadAurora implements RequestHandler<HashMap<String, Object>,
      * @return The state of this lambda function container.
      */
     public HashMap<String, Object> handleRequest(
-            final HashMap<String, Object> request, final Context context
+            final HashMap<String, Object> request,
+            final Context context
     ) {
 
         //Collect initial data.
